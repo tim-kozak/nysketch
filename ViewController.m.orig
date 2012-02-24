@@ -1,0 +1,184 @@
+//
+//  ViewController.m
+//  nysketch
+//
+//  Created by gleb dobzhanskiy on 12/27/11.
+//  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+//
+#import "ViewController.h"
+#include <QuartzCore/QuartzCore.h>
+
+@implementation ViewController
+
+@synthesize isCancelled, curPhotoView, uploadButton, cancelButton, takenPhoto, curJoin, imagePicker, descriptionView;
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Release any cached data, images, etc that aren't in use.
+}
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    isCancelled = YES;
+     curJoin = [[JoinController alloc] initWithNibName:@"JoinController" bundle:nil];
+    [self.view addSubview:curJoin.view];
+    self.imagePicker = [[NYImagePicker alloc] init];
+    if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+        self.imagePicker.sourceType =  UIImagePickerControllerSourceTypeCamera;
+<<<<<<< HEAD
+        cameraOverlay = [[[CameraOverlayViewController alloc] init] autorelease];
+        cameraOverlay.bubbleTextView.text = @"AAAAAAAAAAARH!!!";
+        cameraOverlay.bubblePosition = BubblePositionTop;
+        imagePicker.cameraOverlayView = cameraOverlay.view;
+=======
+        cameraOverlay = [[CameraOverlayViewController alloc] init];
+        cameraOverlay.bubblePosition = BubblePositionTop;
+        imagePicker.cameraOverlayView = cameraOverlay.view;
+        cameraOverlay.bubbleTextView.text = @"AAAAAAAAAAARH!!!";
+>>>>>>> 629ae2378fef97d9e46147c506f0ae63983c0bbf
+        
+    } else {
+        self.imagePicker.sourceType =  UIImagePickerControllerSourceTypePhotoLibrary;
+    }
+    
+    self.imagePicker.delegate = self;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(showImagePicker) name:@"readyForImage" object:nil];
+    
+
+    
+}
+
+- (void)viewDidUnload
+{
+    [super viewDidUnload];
+    // Release any retained subviews of the main view.
+    // e.g. self.myOutlet = nil;
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+
+}
+
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    if (!isCancelled)
+    {    
+    }
+}
+
+- (void) imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+{
+    self.takenPhoto = [info objectForKey:@"UIImagePickerControllerOriginalImage"]; 
+    [[[NYAppDelegate AppDelegate] curFrame] setFrameImage:[info objectForKey:@"UIImagePickerControllerOriginalImage"]];
+    [self.curPhotoView setImage:self.takenPhoto];
+    self.isCancelled = YES;
+    [self dismissModalViewControllerAnimated:YES]; 
+    
+    UIView *photo = [[[UIView alloc] initWithFrame:CGRectMake(0, 0, 320, 426)] autorelease];
+    UIImageView *pv = [[[UIImageView alloc] initWithImage:takenPhoto] autorelease];
+    pv.frame = CGRectMake(0, 0, 320, 426);
+    [photo addSubview:pv];
+    [photo addSubview:cameraOverlay.view];
+    
+    UIGraphicsBeginImageContext(photo.bounds.size);
+    [photo.layer renderInContext:UIGraphicsGetCurrentContext()];
+    //image with bubble
+    UIImage *img = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext(); 
+    
+    
+    
+    UIImageView *iv = [[UIImageView alloc] initWithImage:img];
+    iv.frame = CGRectMake(100, 200, 105, 160);
+    [curJoin.view addSubview:iv];
+    
+    
+}
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
+{
+   // [picker release];
+    isCancelled = YES;
+    [self dismissModalViewControllerAnimated:YES];
+    
+}
+
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+	[super viewWillDisappear:animated];
+}
+
+- (void)viewDidDisappear:(BOOL)animated
+{
+	[super viewDidDisappear:animated];
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    // Return YES for supported orientations
+    return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
+}
+
+- (IBAction) onUpload:(id)sender
+{
+    ASIFormDataRequest *prequest = [[[ASIFormDataRequest alloc] initWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"127.0.0.1/%@", [[[NYAppDelegate AppDelegate] curFrame] picId]]]] autorelease];
+    
+    
+    [prequest setPostValue:@"post" forKey:@"_method"];
+    
+    
+    [prequest setData:UIImageJPEGRepresentation([[[NYAppDelegate AppDelegate] curFrame] frameImage], 1) withFileName:@"myimage" andContentType:@"image/JPEG" forKey:@"image"];
+    
+    
+    
+    
+    [prequest setRequestMethod:@"POST"];
+    //[prequest setCompletionBlock:^{[self onUploaded];}];
+    [prequest setDelegate:self];
+    [prequest startAsynchronous];
+    
+    
+    
+}
+
+- (void) requestFinished:(ASIHTTPRequest *)request
+{
+    
+}    
+
+- (IBAction)onCancel:(id)sender
+{
+    
+}
+
+- (void) showImagePicker
+{
+    NSLog([[[NYAppDelegate AppDelegate] curFrame] description]);
+    [self.descriptionView setText:[[[NYAppDelegate AppDelegate] curFrame] description]];
+    NSString *nick = [[[NYAppDelegate AppDelegate] curFrame] description];
+    NSLog(@"%@", nick);
+    
+    [self presentModalViewController:self.imagePicker animated:YES];
+    
+    
+}
+
+- (void) onUploaded
+{
+    NSLog(@"Uploaded successfully");
+}
+-(void)dealloc
+{
+    [cameraOverlay dealloc];
+    [super dealloc];
+}
+
+
+@end
